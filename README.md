@@ -28,7 +28,15 @@
   <img src="assets/demo.gif" width="320" alt="6 秒演示：弹幕驱动数字人动作">
 </p>
 
-> 6 秒实拍（[原片 demo.mp4](assets/demo.mp4)，无声）。能看到：弹幕 → 动作指令 → 数字人真的执行了。
+> 6 秒实拍。能看到：弹幕 → 动作指令 → 数字人真的执行了。
+> 🎬 [**带声音的原片**（720×1560，v1.0.0 附件）](https://github.com/cyber-xiaoya/cyber-xiaoya-live/releases/download/v1.0.0/demo-sound.mp4) · 无声版 [demo.mp4](assets/demo.mp4)
+
+<p align="center">
+  <img src="assets/stage-panel.png" width="820" alt="舞台页（主播操作台）">
+</p>
+
+这是**主播这端看到的「舞台页」**：左边是数字人画面 + 实时字幕，右边是快捷指令 / 点播 / 参考图面板，
+底部一行是打字、直发动作、点播、中断、设置。（界面示例，字幕为演示数据）
 
 ---
 
