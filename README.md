@@ -131,11 +131,38 @@ curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:9877/    # 期望 200
 
 ---
 
-### 2.5（可选）弹幕采集
+### 2.5（可选）接弹幕 —— 以抖音为例（群友最常用）
 
-想让观众发弹幕就能互动，需要一个采集器把弹幕 POST 到桥的 `/api/danmaku`。
-作者用的是另一个项目（抖音/B站/YouTube/视频号 四平台），**不在本仓库里**。
-只要你的程序按这个格式发请求，桥就认：
+抖音的弹幕**不能直接从网页读**（要签名），社区通行做法是先跑一个**本地采集服务**，
+再用本仓库自带的转发器把消息灌进桥。
+
+#### 抖音三步
+
+1. **拿采集服务**：开源项目 <https://github.com/jwwsjlm/douyinLive>（Go 写的，自带 ws + http）。
+   自行编译或下载 release，改它目录下的 `config.yaml`（端口默认 `1089`、填抖音 cookie），启动。
+2. **确认在跑**：
+
+   ```powershell
+   curl.exe "http://127.0.0.1:1089/api/v1/rooms/<房间号>/status"
+   ```
+
+3. **起转发器**（本仓库自带，`tools/douyin_relay.py`，零额外依赖）：
+
+   ```powershell
+   .venv\Scripts\python.exe tools\douyin_relay.py --room <房间号> --verbose
+   ```
+
+   它会连 `ws://127.0.0.1:1089/ws/<房间号>`，把**弹幕**和**礼物**翻译成
+   `POST http://127.0.0.1:8795/api/danmaku`。
+   通了之后，舞台页右侧「字幕 / 事件」里会出现 `【弹幕】` 条目。
+
+> 转发器只做"翻译 + 转发"，不依赖采集器的内部实现 —— 换成别的采集器，只要它发同样的
+> JSON（`method` / `user.nickname` / `content` / `gift`）也能用。
+> ⚠️ 第三方采集工具与平台的合规风险由使用者自负；本项目只提供 `/api/danmaku` 这一个接口。
+
+#### 其它平台 / 自己写采集器
+
+只要按这个格式发请求，桥就认：
 
 ```http
 POST http://127.0.0.1:8795/api/danmaku
@@ -144,7 +171,7 @@ Content-Type: application/json
 {"nick":"观众名","content":"弹幕内容","platform":"bilibili","text":"念出来的文本"}
 ```
 
-送礼事件额外带 `kind:"gift"`、`gift_item`、`gift_num`、`gift_value`。
+送礼事件额外带 `kind:"gift"`、`gift_item`、`gift_num`、`gift_value`（折算钻）。
 
 ### 2.6（可选）点播歌单
 
