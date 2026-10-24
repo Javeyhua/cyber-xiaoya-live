@@ -3,7 +3,7 @@
 > **本项目永久免费开源。** 唯一官方来源：https://github.com/cyber-xiaoya/cyber-xiaoya-live
 > 任何付费售卖、代下载、代部署均未经授权，欢迎举报（举报：提 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues) 或在本项目官方群里 @我）。
 
-> 👤 **作者：天工开帧** · [抖音](https://v.douyin.com/BgCJXnllitM/) · [哔哩哔哩](https://space.bilibili.com/11946287) · [YouTube](https://www.youtube.com/@jintaoyi) · [博客](https://tgkz-blog.vercel.app)
+> 👤 **作者：天工开帧** · [抖音](https://v.douyin.com/BgCJXnllitM/) · [哔哩哔哩](https://space.bilibili.com/11946287) · [YouTube](https://www.youtube.com/@jintaoyi) · [博客](https://www.19980303.xyz/)
 
 > 📦 **配套仓库**：弹幕采集器（**暂未公开 · 群内提供**）—— 抖音 / B站 / YouTube / 视频号，
 > 装好并把 `tts.output` 设成 `dh` 就能把观众弹幕灌进本仓库的桥（公开版只需抖音？见 §2.5 的三步自拼法）。
@@ -324,7 +324,7 @@ Vidu 侧封盘可能要几分钟到几十分钟；页面「↻ 拉取录播」�
 | 📺 哔哩哔哩 | <https://space.bilibili.com/11946287> |
 | ▶️ YouTube | <https://www.youtube.com/@jintaoyi> |
 | ✖️ X / Twitter | <https://x.com/yijt1339303> |
-| 📝 博客 · 教程 | <https://tgkz-blog.vercel.app> |
+| 📝 博客 · 教程 | <https://www.19980303.xyz/> |
 | 💻 GitHub | <https://github.com/beiyege-01> |
 
 > 项目相关的问题**优先提到本仓库的 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues)** —— 公开可查，也方便后来人搜到答案；私信容易被淹没。
