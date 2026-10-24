@@ -3,6 +3,8 @@
 > **本项目永久免费开源。** 唯一官方来源：https://github.com/cyber-xiaoya/cyber-xiaoya-live
 > 任何付费售卖、代下载、代部署均未经授权，欢迎举报（举报：提 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues) 或在本项目官方群里 @我）。
 
+> 👤 **作者：天工开帧** · [抖音](https://v.douyin.com/BgCJXnllitM/) · [哔哩哔哩](https://space.bilibili.com/11946287) · [YouTube](https://www.youtube.com/@jintaoyi) · [博客](https://tgkz-blog.vercel.app)
+
 > 📦 **配套仓库**：弹幕采集器 [赛博小雅 · 弹幕采集器](https://github.com/cyber-xiaoya/cyber-xiaoya-danmaku) —— 抖音 / B站 / YouTube / 视频号，
 > 装好并把 `tts.output` 设成 `dh` 就能把观众弹幕灌进本仓库的桥。
 
@@ -306,3 +308,21 @@ Vidu 侧封盘可能要几分钟到几十分钟；页面「↻ 拉取录播」�
 
 如果你看到有人在卖，那不是官方行为，欢迎把链接发到 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues)。
 也提醒买家：盗版没有更新、没有答疑、出了问题也没人负责。
+
+---
+
+## 10. 关注作者
+
+赛博小雅是我（**天工开帧**）在业余时间做的开源项目。想看她直播、催更、或者聊聊实现细节，来这些地方找我：
+
+| 平台 | 链接 |
+|---|---|
+| 🎵 抖音 | <https://v.douyin.com/BgCJXnllitM/> |
+| 📺 哔哩哔哩 | <https://space.bilibili.com/11946287> |
+| ▶️ YouTube | <https://www.youtube.com/@jintaoyi> |
+| ✖️ X / Twitter | <https://x.com/yijt1339303> |
+| 📝 博客 · 教程 | <https://tgkz-blog.vercel.app> |
+| 💻 GitHub | <https://github.com/beiyege-01> |
+
+> 项目相关的问题**优先提到本仓库的 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues)** —— 公开可查，也方便后来人搜到答案；私信容易被淹没。
+> 想直接看效果：抖音直播间搜「天工开帧」，晚上常有直播。
