@@ -17,4 +17,4 @@ Copyright (C) 2026 天工开帧 / AI少女宇宙计划组
 第三方组件（FastAPI、httpx、uvicorn、websockets 等）遵循其各自的许可证，详见
 requirements.txt 与各依赖仓库。
 
-官方唯一发布渠道：https://github.com/<组织>/<仓库>
+官方唯一发布渠道：https://github.com/cyber-xiaoya/cyber-xiaoya-live
