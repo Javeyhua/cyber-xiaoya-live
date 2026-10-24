@@ -2,89 +2,259 @@
 
 > **本项目永久免费开源。** 唯一官方来源：https://github.com/cyber-xiaoya/cyber-xiaoya-live
 > 任何付费售卖、代下载、代部署均未经授权，欢迎举报（举报：提 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues) 或在本项目官方群里 @我）。
->
-> 如果你是在某个平台花钱买的这份代码 —— 你被收智商税了，请直接来这里取免费的。
 
-Vidu 只负责**数字人渲染与推流**；LLM、TTS、弹幕处理、歌单全部跑在你自己的电脑上。
+> ⚠️ **先说清楚：这不是"下载双击就能播"的成品。**
+> 仓库里给的是**整套软件**（舞台页 + 本地桥 + 弹幕/歌单/录播全链路），
+> 但**不包含**作者的人物形象、克隆音色、人设、动作库、歌库和任何 API Key —— 那些需要你自己准备。
+> 这份 README 会把"从零跑起来"需要做的每一步写清楚，照着做大约 **1 小时**。
 
-## 这是干什么的
+---
 
-一套可以在本机跑起来的「数字人直播间」：
+## 0. 你需要准备什么
 
-- 浏览器里的**舞台页**（`/stage`）显示数字人画面、字幕、弹幕事件、动作特效
-- 本地 **FastAPI 桥**（默认 `:8795`）负责会话生命周期、说话管线、动作调度
-- 说话走 **LLM → 分句 → TTS（OmniVoice）→ 裸 PCM 实时喂给 Vidu**
-- 弹幕从抖音 / B站 / YouTube / 视频号 采集进来，可以复读、可以翻译成动作指令
-- 支持点播歌单（带歌词字幕）、快捷指令面板、自动录播
+| 项目 | 是否必须 | 说明 |
+|---|---|---|
+| Windows 10/11 + NVIDIA 显卡（≥8GB 显存） | 必须 | 渲染在云端，但 TTS 在本机跑 |
+| Vidu 账号 + API Key | 必须 | 数字人渲染与推流，按秒计费（1 积分/秒） |
+| LLM API Key（DeepSeek 或任意 OpenAI 兼容） | 必须 | 她的"脑子" |
+| TTS 服务（OmniVoice / 见 §2.4） | 必须，否则没声音 | 本机跑，WSL2 + CUDA |
+| ffmpeg | 必须 | 音频解码统一走它 |
+| 弹幕采集器（抖音/B站/YouTube） | 可选 | 不装就只能手动打字互动 |
+| 点播歌库 | 可选 | 不放歌就没有点播 |
+| 摄像头/推流软件（OBS 等） | 可选 | 想把画面推给平台才需要 |
 
-## 一句话架构
+---
+
+## 1. 它到底是怎么跑起来的
 
 ```
-舞台页(浏览器) ──文字──▶ 桥(FastAPI :8795) ──type9──▶ Vidu WS
-                          │  ▲
-              LLM 流式 ◀──┘  └── PCM s16le/24kHz/mono 二进制帧(48B/ms 实时节奏)
-                          │
-        本机 TTS(OmniVoice :9877) / audio 目录点播文件 ──▶ ffmpeg 统一解码
-Vidu: 渲染口型+动作 ──▶ RTC 频道(托管/自备) ──▶ 舞台页订阅看画面听声音
+浏览器「舞台页」 ──文字──▶ 本地桥(FastAPI :8795) ──type9──▶ Vidu 云端
+     ▲                        │
+     │                   LLM 流式 → 分句 → TTS(本机) → PCM 流
+     │                        │
+     └── WebRTC 订阅画面 ◀── Vidu 渲染口型+动作 ──▶ RTC 频道
 ```
 
-## 快速开始
+- **Vidu 只负责"变成画面"**：给文字/音频，它渲染口型、表情、动作并推流
+- **其余全在本机**：LLM 思考、TTS 发声、弹幕处理、点播、录播下载
+- 舞台页是本地网页（`http://127.0.0.1:8795/stage`），你在浏览器里操作，不需要公网
+
+**为什么这么设计**：不用买云端 ASR/LLM/TTS 套餐，成本只剩 Vidu 的渲染费；音色、人设、歌单全在你自己手里。
+
+---
+
+## 2. 准备工作（照着做）
+
+### 2.1 Vidu 账号、形象、动作库
+
+1. 注册 <https://platform.vidu.cn>，充值（按 1 积分/秒计费，余额 <45 积分开不了场）
+2. 在控制台创建一个**形象**（上传一张正脸照或一段视频），记下它的 **avatar_id**
+3. （可选）建一个**动作库**，往里加动作，记下 **library_id**；不建就填 `0` 用平台默认库
+4. 在「API Key」页面生成 key，形如 `vda_xxx`
+
+### 2.2 LLM API Key
+
+默认用 DeepSeek（`https://api.deepseek.com`，模型 `deepseek-flash`）。
+把 key 存成一个文本文件，路径填进 `config.json → llm.key_file`；也可以直接用环境变量 `DEEPSEEK_API_KEY`。
+
+### 2.3 本机环境
 
 ```powershell
-# 1) 建环境(Python 3.12)
+# 1) Python 3.12 + uv
+winget install --id Python.Python.3.12
+pip install uv
+
+# 2) 装依赖
 uv venv .venv --python 3.12
 uv pip install -r requirements.txt --default-index https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 2) 复制配置并填写你自己的 key
-copy config.example.json config.json
-#   vidu.api_key        ← 你的 Vidu API Key
-#   avatar.avatar_id    ← 你上传到 Vidu 的形象 ID(或 image_uri)
-#   rtc.artc.app_id / app_key  ← 仅自备 RTC 模式需要
-#   llm.key_file        ← 存 DeepSeek(或兼容) API Key 的文件路径
-
-# 3) 起服务
-.venv\Scripts\python.exe -m src.main        # 桥 + 舞台页 http://127.0.0.1:8795/stage
+# 3) ffmpeg（作者放在 C:\ffmpeg7.1.1\bin，你也可以直接放进 PATH）
+ffmpeg -version
 ```
 
-一键启动脚本：双击 `启动-组件版全链路.cmd`（会读环境变量，缺的组件自动跳过）。
+### 2.4 TTS —— 这一步最容易卡住
 
-### 可选组件（都可不要）
+项目**只认 OmniVoice**（`tts.engine = "omnivoice"`），因为要支持"克隆音色 + 直播中热切音色"。
 
-| 组件 | 作用 | 不装的后果 |
+#### 方案 A：OmniVoice + WSL2（推荐，作者本机就是这样跑的）
+
+要求：WSL2 + Ubuntu-22.04 + NVIDIA 驱动 + 至少 8GB 可用显存（作者实测稳定占用 ~11GB）。
+
+```bash
+# ── 以下全部在 WSL2 的 Ubuntu-22.04 里执行 ──
+sudo apt update && sudo apt install -y ffmpeg git
+git clone https://github.com/k2-fsa/OmniVoice ~/omnivoice-wsl
+cd ~/omnivoice-wsl
+
+# 建环境（以官方 README 为准，作者用 Python 3.12 + torch cu13x + flashinfer）
+uv venv .venv --python 3.12
+uv pip install -r requirements.txt
+
+# 下载模型 OmniVoice-bf16（HuggingFace 或 ModelScope 均可）
+# 作者把模型放在 Windows 的 E 盘，WSL 里通过 /mnt/e/... 访问，不占 WSL 磁盘
+
+# 启动服务（FlashInfer + CUDA Graph 加速）
+export CUDA_HOME=~/omnivoice-wsl/.venv/lib/python3.12/site-packages/nvidia/cuda_nvcc
+.venv/bin/python demo_flashinfer.py \
+  --model /mnt/e/llama-models/models/OmniVoice-bf16 \
+  --port 9877 --no-asr --ip 0.0.0.0 \
+  --graph-buckets 5,10,15,20,30
+```
+
+> ⚠️ `demo_flashinfer.py` 的参数、依赖版本可能随上游变化，**以 OmniVoice 官方 README 为准**；
+> 上面的命令是作者本机实测能跑的那一份，仅作参考。
+
+启动后从 Windows 验证：
+
+```powershell
+curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:9877/    # 期望 200
+```
+
+- **WSL2 镜像网络模式**下用 `127.0.0.1:9877`
+- 默认 NAT 模式下用 `wsl hostname -I` 拿到的 IP，填进 `config.json → tts.omnivoice_base`
+- WSL2 IP 每次重启可能变，改了要同步改配置（或者用一键脚本自动检测）
+
+**音色从哪来**：`tts.voices_dir` 指向一个目录，里面每个子文件夹是一种音色：
+
+| 文件夹内容 | 音色类型 | 例子 |
 |---|---|---|
-| OmniVoice（WSL2 :9877） | 克隆音色的 TTS | 没有说话声音，其他功能正常 |
-| 弹幕采集器（multi-danmaku-tts） | 抖音/B站/YouTube 弹幕 | 只能手动打字互动 |
-| 点播歌单（audio/ 目录） | 放歌 + 歌词字幕 | 没有点播 |
+| `design.json` | 用属性"设计"音色（性别/年龄/音调/方言，不需要参考音频） | 御姐音 |
+| `ref_audio.wav` + `ref_text.txt` + `omnivoice.txt` | 克隆音色 | 用你自己的录音克隆 |
+| `ref_audio.wav` + `ref_text.txt` | 同上，少一个描述文件 | |
 
-用环境变量指路：`DSH_OMNIVOICE_CMD`、`DSH_DANMAKU_ROOT`、`DSH_VOICE_BRIDGE_CFG`。
+参考音频要求：**3–10 秒、单句、16kHz 单声道、无背景音**，`ref_text` 必须和音频逐字一致。
 
-## 需要你自己准备的素材
+#### 方案 B：先不装 TTS（无声彩排）
 
-仓库**不附带**以下内容（这是作者的核心资产，也是防止有人拿去做二次售卖的边界）：
+桥没有 TTS 也能起来：舞台页能开、能连线、画面会动、字幕会滚，只是**她不会说话**。
+适合先把 Vidu 链路和舞台页跑通，再回头折腾 TTS。
 
-- 人物形象（图片/视频，上传到 Vidu 换取 `avatar_id`）
-- 克隆音色的参考音频 + 参考文本
-- 你的人设提示词（`llm.system_prompt`）、动作库、歌单
-- 直播账号的 Cookie / API Key
+---
 
-## 目录结构
+### 2.5（可选）弹幕采集
 
+想让观众发弹幕就能互动，需要一个采集器把弹幕 POST 到桥的 `/api/danmaku`。
+作者用的是另一个项目（抖音/B站/YouTube/视频号 四平台），**不在本仓库里**。
+只要你的程序按这个格式发请求，桥就认：
+
+```http
+POST http://127.0.0.1:8795/api/danmaku
+Content-Type: application/json
+
+{"nick":"观众名","content":"弹幕内容","platform":"bilibili","text":"念出来的文本"}
 ```
-src/            桥与引擎(bridge/engine/llm/tts/vidu/dm_router)
-stage/          舞台页(单文件 HTML)
-tools/          自检、回放、歌词打轴、动作库同步等脚本
-audio/          点播目录(歌不入库)
-config.example.json  配置模板(不含任何密钥)
+
+送礼事件额外带 `kind:"gift"`、`gift_item`、`gift_num`、`gift_value`。
+
+### 2.6（可选）点播歌单
+
+把 mp3/flac/wav 丢进 `audio/` 目录，舞台页「🎵 点播歌单」就能看到。
+想要逐行歌词字幕，需要 `lyrics-cache/<歌名>.lrc.json`（用 `tools/lyrics_align.py` 生成，需要 ASR 环境）。
+歌**不要提交进仓库**（`.gitignore` 已排除，版权也不允许）。
+
+---
+
+## 3. 配置 `config.json`
+
+```powershell
+copy config.example.json config.json
 ```
 
-## 许可证
+| 字段 | 填什么 |
+|---|---|
+| `vidu.api_key` | 你的 `vda_...` |
+| `avatar.avatar_id` | 你上传的形象 ID（有 `image_uri` 就用那个） |
+| `action.library_id` | 动作库 ID；不建就填 `"0"` |
+| `rtc.mode` | `managed`（平台托管，推荐）或 `customer`（自备 RTC，要填 `rtc.artc.*`） |
+| `llm.key_file` | 存 key 的文本文件路径 |
+| `llm.system_prompt` | **你自己的人设**（模板里是示例，务必改） |
+| `tts.omnivoice_base` | OmniVoice 地址，默认 `http://127.0.0.1:9877` |
+| `tts.voices_dir` | 音色目录 |
+| `tts.files_dir` | 点播目录，默认 `audio` |
+| `bridge.port` | 默认 8795 |
 
-- **代码**：[GNU AGPL-3.0](./LICENSE) —— 你可以自由使用、修改、分发；但分发/提供网络服务时必须同样开源。
-- **素材与品牌**：见 [NOTICE](./NOTICE)，不在 AGPL 授权范围内。
-- 第三方依赖各自的许可证见 `requirements.txt` 对应项目。
+`config.json` 里有密钥，**已被 `.gitignore` 排除**，不要提交。
 
-## 关于倒卖
+---
 
-本项目**代码免费、永久免费**。我们不会在任何平台出售它。
+## 4. 启动
 
-如果你看到有人在卖，那不是官方行为，欢迎把链接发到 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues)。同时提醒买家：盗版没有更新、没有答疑、出了事也没人管。
+```powershell
+# 只起桥 + 舞台页（最简单）
+.venv\Scripts\python.exe -m src.main
+
+# 或者一键脚本：桥 + TTS + 弹幕 + 打开舞台页（缺的组件自动跳过）
+双击 启动-组件版全链路.cmd
+```
+
+打开 <http://127.0.0.1:8795/stage>，点「开始连线」，等 5–15 秒画面出来。
+
+> ⚠️ 连线即开始计费（1 积分/秒）。测完记得点「断开」。
+
+---
+
+## 5. 舞台页能干什么
+
+| 区域 | 功能 |
+|---|---|
+| 中间 | 数字人画面 + 字幕 + 动作指令特效（只显示弹幕抓出来的指令） |
+| 底部输入框 | 打字跟她聊（走 LLM → TTS → 说话） |
+| 🎬 直发 | 直接把动作指令发给 Vidu，不经过 LLM（她默默执行） |
+| 🕹 快捷指令 | 点一下即发送；编辑模式可拖拽排序、改名、新建 |
+| 🎵 点播歌单 | 放歌（带歌词字幕） |
+| 🖼 参考图 | 换装 / 拿起商品 / 换背景 |
+| ⏺ 自动录播 | 让 Vidu 服务端录下这一场，播完自动下载到本地 |
+| ⚙ 设置 | 音色、开场白、字幕位置、黑名单词表等 |
+
+---
+
+## 6. 常见问题
+
+**Q：连不上 Vidu / 401？**
+检查 `vidu.api_key` 是否正确、余额是否 <45 积分（会直接开不了场）。
+
+**Q：她没有声音？**
+99% 是 TTS 没起来。先 `curl http://127.0.0.1:9877/` 看是不是 200；WSL2 重启后需要重新拉起服务。
+
+**Q：WSL2 重启后连不上 9877？**
+IP 变了。`wsl hostname -I` 查新 IP，改 `tts.omnivoice_base`，或者用镜像网络模式走 `127.0.0.1`。
+
+**Q：画面卡 / 说话延迟大？**
+先看 GPU 占用；TTS 和渲染抢显存时，把 OmniVoice 的 `--graph-buckets` 减少一些。
+
+**Q：录播下载不到文件？**
+Vidu 侧封盘可能要几分钟到几十分钟；页面「↻ 拉取录播」可以手动重试。
+
+**Q：能换别的 TTS 吗？**
+代码里 `tts.engine` 目前只实现 `omnivoice`；要接 Edge-TTS / GPT-SoVITS 需要自己写一个适配层（`src/tts/` 下加一个类即可）。
+
+---
+
+## 7. 仓库里**没有**什么
+
+为了避免"下载后发现跑不起来"，这里明确列出作者**故意没放**的东西：
+
+- ❌ 人物形象（图片/视频/形象模型）—— 需要你自己上传到 Vidu
+- ❌ 克隆音色（参考音频、音色模型）
+- ❌ 人设提示词正文、文案、歌单、动作库内容
+- ❌ 任何 API Key、Cookie、账号凭据
+- ❌ OmniVoice 模型权重（几 GB）、Python 依赖环境（2 GB+）、歌库音频
+- ❌ 弹幕采集器（另一个项目，见 §2.5）
+
+**这不是藏私**：形象、音色、人设是每个主播自己的东西，也是防止有人拿本项目做二次售卖的边界。
+代码是完整的，缺的都是"你自己的内容"。
+
+---
+
+## 8. 许可证
+
+- **代码**：[GNU AGPL-3.0](./LICENSE)
+- **素材与品牌**：见 [NOTICE](./NOTICE)，不在 AGPL 授权范围内
+- 第三方依赖见 `requirements.txt`
+
+## 9. 关于倒卖
+
+本项目**代码免费、永久免费**，我们不会在任何平台出售它。
+
+如果你看到有人在卖，那不是官方行为，欢迎把链接发到 [Issue](https://github.com/cyber-xiaoya/cyber-xiaoya-live/issues)。
+也提醒买家：盗版没有更新、没有答疑、出了问题也没人负责。
