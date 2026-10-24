@@ -5,8 +5,8 @@
 
 > 👤 **作者：天工开帧** · [抖音](https://v.douyin.com/BgCJXnllitM/) · [哔哩哔哩](https://space.bilibili.com/11946287) · [YouTube](https://www.youtube.com/@jintaoyi) · [博客](https://www.19980303.xyz/)
 
-> 📦 **配套仓库**：弹幕采集器（**暂未公开 · 群内提供**）—— 抖音 / B站 / YouTube / 视频号，
-> 装好并把 `tts.output` 设成 `dh` 就能把观众弹幕灌进本仓库的桥（公开版只需抖音？见 §2.5 的三步自拼法）。
+> 📦 **配套仓库**：[赛博小雅 · 弹幕采集器](https://github.com/cyber-xiaoya/cyber-xiaoya-danmaku) —— 抖音 / B站 / YouTube / 视频号，
+> 装好并把 `tts.output` 设成 `dh` 就能把观众弹幕灌进本仓库的桥。
 
 > ⚠️ **先说清楚：这不是"下载双击就能播"的成品。**
 > 仓库里给的是**整套软件**（舞台页 + 本地桥 + 弹幕/歌单/录播全链路），
@@ -138,17 +138,17 @@ curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:9877/    # 期望 200
 
 ### 2.5（可选）接弹幕 —— 以抖音为例（群友最常用）
 
-**省事的做法**：用配套的**弹幕采集器**（**暂未公开 · 群内提供**）—— 它把抖音/B站/YouTube/视频号
-四家都封装好了，`tts.output` 设成 `dh`（默认就是）即可。拿到之后：
+**最省事的做法**：直接用配套仓库 [赛博小雅 · 弹幕采集器](https://github.com/cyber-xiaoya/cyber-xiaoya-danmaku)，
+它把抖音/B站/YouTube/视频号 四家都封装好了，`tts.output` 设成 `dh`（默认就是）即可：
 
 ```powershell
+git clone https://github.com/cyber-xiaoya/cyber-xiaoya-danmaku.git
+cd cyber-xiaoya-danmaku
 copy config.example.json config.json      # 填房间号
 .venv\Scripts\python.exe reader.py       # 抖音还需另装 douyinLive（见下文）
 ```
 
-> 为什么暂不公开：它包含 B站 Cookie 对接向导和几家的采集细节，先在小范围跑稳再放出来。
-
-**不进群也能做**：只要你只做抖音，按下面三步用公开的上游项目 + 本仓库自带的转发器，效果一样：
+只想做抖音、不想再挂一个仓库？也可以按下面三步，用公开的上游项目 + 本仓库自带的转发器：
 
 ---
 
