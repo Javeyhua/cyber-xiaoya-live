@@ -9,9 +9,9 @@ r"""歌词打轴(方案C): 本机 ASR 字级时间戳 × 歌词 md 的成曲顺�
 前奏/间奏期间没有歌声 → 行时间自然跳过乐器段。
 
 用法(用带 funasr/faster-whisper 的 venv-speech 跑, 不是项目 venv):
-  D:\speech-to-speech\venv-speech\Scripts\python.exe tools\lyrics_align.py "<歌曲.flac>"
-  D:\speech-to-speech\venv-speech\Scripts\python.exe tools\lyrics_align.py --all     # 批量: song_dirs 全部
-  D:\speech-to-speech\venv-speech\Scripts\python.exe tools\lyrics_align.py "<歌>" --force   # 忽略缓存重打
+  python tools\lyrics_align.py "<歌曲.flac>"
+  python tools\lyrics_align.py --all     # 批量: song_dirs 全部
+  python tools\lyrics_align.py "<歌>" --force   # 忽略缓存重打
 
 输出: <项目>/lyrics-cache/<歌名>.lrc.json
   {"song":..., "duration_ms":..., "lines":[{"text","start","end"}], "method":"whisper-large-v3", ...}

@@ -23,7 +23,7 @@ try {
     Write-Host ("[launcher] 日志开启失败({0}), 继续执行" -f $_.Exception.Message) -ForegroundColor DarkYellow
 }
 
-# 路径自动推导: 脚本所在目录 = 本项目目录; 弹幕采集器/D:\speech-to-speech 都是可选的, 缺了就跳过
+# 路径自动推导: 脚本所在目录 = 本项目目录; 弹幕采集器和外部语音桥都是可选的, 缺了就跳过
 $ViduRoot    = $PSScriptRoot
 $DanmakuRoot = if ($env:DSH_DANMAKU_ROOT) { $env:DSH_DANMAKU_ROOT } else { Join-Path (Split-Path $PSScriptRoot -Parent) 'multi-danmaku-tts' }
 $ViduPy      = Join-Path $ViduRoot '.venv\Scripts\python.exe'
