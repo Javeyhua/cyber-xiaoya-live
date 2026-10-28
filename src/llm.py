@@ -2,7 +2,7 @@
 
 默认指向 DeepSeek 官方(api.deepseek.com + deepseek-chat); base_url / model / key_file
 全部在 config.json 里, 以后换 API 只改配置不改代码。key 解析顺序:
-  1. llm.key_file 指向的文本文件(如 E:\\deepseek-works\\vidu-dh\\deepseek-key.txt)
+  1. llm.key_file 指向的文本文件(如 C:\\keys\\deepseek-key.txt)
   2. 环境变量 DEEPSEEK_API_KEY
 流式输出边到边分句: 每凑齐一句就交出去合成, 首字延迟 ≈ LLM 首句时间 + 一次 TTS。
 """
